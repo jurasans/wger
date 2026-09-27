@@ -93,3 +93,10 @@ venv-wger
 
 # macOS
 .DS_Store
+
+# Local deployment config and overrides (see config/.gitignore too)
+/backup/
+/docker-compose.override.yml
+/grafana/docker-compose.override.yml
+/dev-postgres/.env
+/dev/.env
