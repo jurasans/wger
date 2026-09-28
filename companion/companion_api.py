@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 # SPEC.md §14am (wger-companion) - trainer-mode API additions for this
-# deployment, kept entirely OUTSIDE the upstream source tree.
+# deployment. A real, committed part of this fork (not a runtime-only
+# "patch" - it used to live in a gitignored patches/ dir that was never
+# actually committed, which is how it went missing entirely when that dir's
+# untracked contents got wiped; see wger-companion's own SPEC.md for that
+# incident).
 #
 # This is a brand-new module, mounted into the container at
 # wger/companion_api.py (see docker-compose.override.yml) - it never
