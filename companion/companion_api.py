@@ -24,6 +24,7 @@
 # Django
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from django.urls import path
 
@@ -40,6 +41,7 @@ from rest_framework.response import Response
 from wger.companion_ledger.urls_fragment import urlpatterns as _ledger_urlpatterns
 from wger.gym.helpers import is_same_gym
 from wger.gym.models import Gym
+from wger.manager.models import WorkoutSession
 from wger.urls import urlpatterns as _base_urlpatterns
 from wger.utils.headless_long_lived import mint_long_lived_refresh_token
 
@@ -145,6 +147,52 @@ def trainer_gym_members(request):
     )
 
 
+@api_view()
+@permission_classes([IsAuthenticated])
+def trainer_gym_roster(request):
+    """
+    SPEC_STUBS.md S-4 - last-trained-date-per-member roster, sorted
+    longest-inactive-first, for the companion app's trainer roster screen.
+    Same gym-scoping/permission gate as trainer_gym_members, extended with
+    each member's most recent COMPLETED session (datetime_end set - an
+    open/abandoned session doesn't count as "trained").
+    """
+    if not (
+        request.user.has_perm('gym.gym_trainer')
+        or request.user.has_perm('gym.manage_gym')
+        or request.user.has_perm('gym.manage_gyms')
+    ):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    gym_id = request.user.userprofile.gym_id
+    if not gym_id:
+        return Response({'members': []})
+
+    members = Gym.objects.get_members(gym_id)
+    last_trained_by_user = {
+        row['user']: row['last']
+        for row in WorkoutSession.objects.filter(user__in=members, datetime_end__isnull=False)
+        .values('user')
+        .annotate(last=Max('datetime_start'))
+    }
+
+    def roster_row(u):
+        last = last_trained_by_user.get(u.id)
+        return {
+            'id': u.id,
+            'username': u.username,
+            'full_name': u.get_full_name(),
+            'last_trained': last.date().isoformat() if last else None,
+        }
+
+    roster = [roster_row(u) for u in members]
+    # None (never trained) sorts first - (False, '') < (True, any date
+    # string) - then ascending date string, which is also chronological
+    # ascending for ISO dates, i.e. oldest/longest-inactive first.
+    roster.sort(key=lambda m: (m['last_trained'] is not None, m['last_trained'] or ''))
+    return Response({'members': roster})
+
+
 urlpatterns = (
     _base_urlpatterns
     + [
@@ -163,6 +211,12 @@ urlpatterns = (
             'api/v2/trainer/members/',
             trainer_gym_members,
             name='trainer_gym_members',
+        ),
+        # SPEC_STUBS.md S-4 - gym roster overview.
+        path(
+            'api/v2/trainer/roster/',
+            trainer_gym_roster,
+            name='trainer_gym_roster',
         ),
     ]
     # SPEC_STUBS.md S-15/S-16 - coin shop ledger (purchase/consume/balance/
