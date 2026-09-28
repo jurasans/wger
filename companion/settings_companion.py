@@ -19,6 +19,7 @@ from .main import *  # noqa: F401,F403
 ROOT_URLCONF = 'wger.companion_api'
 
 # S-15/S-16 - companion/companion_ledger/ (LedgerEntry, ItemDefinition).
-# Appended, never inserted first/replacing the list, so this can never
-# shadow or reorder any of wger's own apps.
-INSTALLED_APPS = [*INSTALLED_APPS, 'wger.companion_ledger']
+# S-25/S-37 - companion/companion_gym/ (GymEconomyOverride, GymCheckInItem,
+# MemberItemOptOut). Appended, never inserted first/replacing the list, so
+# this can never shadow or reorder any of wger's own apps.
+INSTALLED_APPS = [*INSTALLED_APPS, 'wger.companion_ledger', 'wger.companion_gym']

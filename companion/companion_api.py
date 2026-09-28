@@ -38,6 +38,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 # wger
+from wger.companion_gym.urls_fragment import urlpatterns as _gym_urlpatterns
 from wger.companion_ledger.urls_fragment import urlpatterns as _ledger_urlpatterns
 from wger.gym.helpers import is_same_gym
 from wger.gym.models import Gym
@@ -224,4 +225,7 @@ urlpatterns = (
     # inlined, so companion_api.py doesn't grow a second feature's routes
     # directly in its own body.
     + _ledger_urlpatterns
+    # SPEC_STUBS.md S-25/S-37 - gym-manager economy overrides + check-in
+    # items.
+    + _gym_urlpatterns
 )
