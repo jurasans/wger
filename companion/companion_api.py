@@ -37,6 +37,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 # wger
+from wger.companion_ledger.urls_fragment import urlpatterns as _ledger_urlpatterns
 from wger.gym.helpers import is_same_gym
 from wger.gym.models import Gym
 from wger.urls import urlpatterns as _base_urlpatterns
@@ -144,21 +145,29 @@ def trainer_gym_members(request):
     )
 
 
-urlpatterns = _base_urlpatterns + [
-    # SPEC.md §14am - trainer companion mode's token mint, JSON-API-only
-    # counterpart to core/views/user.py's session-based trainer_login.
-    path(
-        'api/v2/trainer/login-as/<int:user_id>/',
-        trainer_login_as,
-        name='trainer_login_as',
-    ),
-    # SPEC.md §14am - trainer companion mode's member picker. JSON
-    # counterpart to gym/views/gym.py's GymUserListView (/en/gym/<pk>/members)
-    # - that page isn't reachable from the companion app's own origin at all
-    # (its reverse proxy only forwards /api/ and /allauth/).
-    path(
-        'api/v2/trainer/members/',
-        trainer_gym_members,
-        name='trainer_gym_members',
-    ),
-]
+urlpatterns = (
+    _base_urlpatterns
+    + [
+        # SPEC.md §14am - trainer companion mode's token mint, JSON-API-only
+        # counterpart to core/views/user.py's session-based trainer_login.
+        path(
+            'api/v2/trainer/login-as/<int:user_id>/',
+            trainer_login_as,
+            name='trainer_login_as',
+        ),
+        # SPEC.md §14am - trainer companion mode's member picker. JSON
+        # counterpart to gym/views/gym.py's GymUserListView (/en/gym/<pk>/members)
+        # - that page isn't reachable from the companion app's own origin at all
+        # (its reverse proxy only forwards /api/ and /allauth/).
+        path(
+            'api/v2/trainer/members/',
+            trainer_gym_members,
+            name='trainer_gym_members',
+        ),
+    ]
+    # SPEC_STUBS.md S-15/S-16 - coin shop ledger (purchase/consume/balance/
+    # inventory). Its own urls_fragment.py, concatenated here rather than
+    # inlined, so companion_api.py doesn't grow a second feature's routes
+    # directly in its own body.
+    + _ledger_urlpatterns
+)
