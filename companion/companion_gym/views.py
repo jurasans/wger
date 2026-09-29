@@ -83,14 +83,23 @@ def gym_checkin_items(request):
     return Response(GymCheckInItemSerializer(item, context={'opted_out_ids': set()}).data)
 
 
-@api_view(['DELETE'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def gym_checkin_item_detail(request, item_id):
+    """PATCH: edit name / unit / kind / value_type / order. DELETE: remove.
+    Manager only."""
     if not _is_manager(request.user):
         return Response(status=status.HTTP_403_FORBIDDEN)
     item = get_object_or_404(GymCheckInItem, id=item_id, gym_id=_gym_id(request))
-    item.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    if request.method == 'DELETE':
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    serializer = GymCheckInItemSerializer(item, data=request.data, partial=True, context={'opted_out_ids': set()})
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.save()
+    return Response(serializer.data)
 
 
 @api_view(['POST'])
