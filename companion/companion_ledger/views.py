@@ -75,6 +75,7 @@ def ledger_purchase(request):
         kind=LedgerEntry.Kind.PURCHASE,
         item_key=item_key,
         cost_copper=cost_copper,
+        meta=request.data.get('meta') if isinstance(request.data.get('meta'), dict) else None,
     )
     return Response(LedgerEntrySerializer(entry).data)
 
@@ -104,6 +105,7 @@ def ledger_consume(request):
         kind=LedgerEntry.Kind.CONSUME,
         item_key=item_key,
         cost_copper=0,
+        meta=request.data.get('meta') if isinstance(request.data.get('meta'), dict) else None,
     )
     return Response(LedgerEntrySerializer(entry).data)
 
